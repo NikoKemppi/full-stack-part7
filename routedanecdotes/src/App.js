@@ -60,9 +60,13 @@ const Footer = () => (
 )
 
 const CreateNew = (props) => {
-  const contentField = useField('text')
-  const authorField = useField('text')
-  const infoField = useField('text')
+  const contentFieldFull = useField('text')
+  const authorFieldFull = useField('text')
+  const infoFieldFull = useField('text')
+
+  const {onReset: contentReset, ...contentField} = contentFieldFull
+  const {onReset: authorReset, ...authorField} = authorFieldFull
+  const {onReset: infoReset, ...infoField} = infoFieldFull
 
   const navigate = useNavigate()
 
@@ -85,9 +89,9 @@ const CreateNew = (props) => {
   }
 
   const handleReset = () => {
-    contentField.onReset()
-    authorField.onReset()
-    infoField.onReset()
+    contentReset()
+    authorReset()
+    infoReset()
   }
 
   return (
@@ -139,6 +143,7 @@ const App = () => {
     setAnecdotes(anecdotes.concat(anecdote))
   }
 
+  /*
   const anecdoteById = (id) =>
     anecdotes.find(a => a.id === id)
 
@@ -152,6 +157,7 @@ const App = () => {
 
     setAnecdotes(anecdotes.map(a => a.id === id ? voted : a))
   }
+  */
 
   const match = useMatch('/anecdotes/:id')
   const anecdote = match ? anecdotes.find(a => a.id === Number(match.params.id)) : null
