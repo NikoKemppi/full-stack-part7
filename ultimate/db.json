@@ -7,6 +7,14 @@
     {
       "id": 2,
       "content": "best feature ever <3"
+    },
+    {
+      "content": "this is a test note",
+      "id": 3
+    },
+    {
+      "content": "hello hello hello",
+      "id": 4
     }
   ],
   "persons": [
@@ -19,6 +27,11 @@
       "id": 2,
       "name": "Tarja Halonen",
       "number": "040-2223334"
+    },
+    {
+      "name": "Antti Seinala",
+      "number": "040-1122334",
+      "id": 3
     }
   ]
 }
