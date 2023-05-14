@@ -82,7 +82,7 @@ const CreateNew = (props) => {
       votes: 0
     })
     navigate('/')
-    props.setNotification(`a new anecdote ${content} creaqted!`)
+    props.setNotification(`a new anecdote ${content} created!`)
     setTimeout(() => {
       props.setNotification('')
     }, 5000)
