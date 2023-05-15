@@ -1,19 +1,108 @@
 import { useEffect, useRef } from 'react'
+import { useState } from 'react'
 import Blog from './components/Blog'
 import Notification from './components/Notification'
 import BlogForm from './components/BlogForm'
 import Togglable from './components/Togglable'
-// import blogService from './services/blogs'
-// import loginService from './services/login'
 import { useNotificationValue, useNotificationDispatch } from './NotificationContext'
 import { useUserValue, useUserDispatch } from './UserContext'
 import { useQuery, useMutation, useQueryClient  } from 'react-query'
+import { Routes, Route } from 'react-router-dom'
+// import { useMatch } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { setToken, getBlogs, createBlog, updateBlog, removeBlog, login } from './requests'
+import axios from 'axios'
+
+const Menu = () => {
+  const padding = {
+    paddingRight: 5
+  }
+  return (
+    <div>
+      <Link style={padding} to="/">blogs</Link>
+      <Link style={padding} to="/users">users</Link>
+    </div>
+  )
+}
+
+const Home = ({ blogs, user, addBlog, voteBlog, deleteBlog, blogFormRef }) => {
+  return (
+    <div>
+      <Togglable buttonLabel1="create new blog" buttonLabel2="cancel" ref={blogFormRef}>
+        <BlogForm createBlog={addBlog} />
+      </Togglable>
+      {blogs.sort((a, b) => b.likes - a.likes).map(blog =>
+        <Blog key={blog.id} blog={blog} username={user.user.name} updateBlog={voteBlog} deleteBlog={deleteBlog} />
+      )}
+    </div>
+  )
+}
+
+const Users = ({ users }) => {
+  console.log('users:', users)
+
+  users.for
+
+  return (
+    <div>
+      <h2>Users</h2>
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>blogs created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map(user =>
+            <tr key={user.id}>
+              <td>{user.name}</td>
+              <td>{user.blogs.length}</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+/*
+const User = ({ user }) => {
+  if (!user) {
+    return null
+  }
+
+  return (
+    <div>
+      <h2>{user.name}</h2>
+      <h3>added blogs</h3>
+      <ul>
+        {user.blogs.map(blog =>
+        {
+          <li>{blog.title}</li>
+        }
+        )}
+      </ul>
+    </div>
+  )
+}
+
+const SingleBlog = ({ blog }) => {
+  return (
+    <div>
+      <h2>{blog.title} {blog.author}</h2>
+      <p>{blog.url}</p>
+      <p>{blog.likes} likes</p>
+      <p>added by {blog.user.name}</p>
+    </div>
+  )
+}
+
+
+*/
 
 const App = () => {
-  // const [username, setUsername] = useState('')
-  // const [password, setPassword] = useState('')
-  // const [user, setUser] = useState(null)
+  const [users, setUsers] = useState([])
 
   const queryClient = useQueryClient()
   const notification = useNotificationValue()
@@ -47,6 +136,15 @@ const App = () => {
       // blogService.setToken(user.token)
       setToken(user.token) // new version
     }
+  }, [])
+
+  useEffect(() => {
+    async function fetchData() {
+      const response = await axios.get('http://localhost:3003/api/users')
+      console.log('fetch:', response.data)
+      setUsers(response.data)
+    }
+    fetchData()
   }, [])
 
   const blogFormRef = useRef()
@@ -99,21 +197,6 @@ const App = () => {
   const addBlog = async (blogObject) => {
     blogFormRef.current.toggleVisibility()
     newBlogMutation.mutate(blogObject)
-    /*
-    const modifiedUser = {
-      id: user2.user.id,
-      name: user2.user.name,
-      user: user2.user.username
-    }
-    const blog = {
-      user: modifiedUser,
-      likes: 0,
-      author: blogObject.author,
-      title: blogObject.title,
-      url: blogObject.url
-    }
-    updateBlogMutation.mutate({ id: blog.id, updatedBlog: blog })
-    */
   }
 
   const voteBlog = async (blog) => {
@@ -151,6 +234,14 @@ const App = () => {
   const blogs2 = result.data
   console.log(blogs2)
 
+  /*
+  const userMatch = useMatch('/users/:id')
+  const user = userMatch ? users.find(a => a.id === Number(userMatch.params.id)) : null
+  /*
+  const blogMatch = useMatch('/users/:id')
+  const blog = userMatch ? blogs2.find(a => a.id === Number(blogMatch.params.id)) : null
+  */
+
   if (user2.user === null) {
     return (
       <div>
@@ -186,21 +277,27 @@ const App = () => {
   return (
     <div>
       <div>
+        <Menu />
         <h2>blogs</h2>
         <Notification message={notification} />
         {user2.user.name} logged in
         <button onClick={handleLogout}>logout</button>
       </div>
-      <div>
-        <Togglable buttonLabel1="create new blog" buttonLabel2="cancel" ref={blogFormRef}>
-          <BlogForm createBlog={addBlog} />
-        </Togglable>
-        {blogs2.sort((a, b) => b.likes - a.likes).map(blog =>
-          <Blog key={blog.id} blog={blog} username={user2.user.name} updateBlog={voteBlog} deleteBlog={deleteBlog} />
-        )}
-      </div>
+      <Routes>
+        <Route path="/" element={<Home blogs={blogs2} user={user2} addBlog={addBlog} voteBlog={voteBlog} deleteBlog={deleteBlog} blogFormRef={blogFormRef} />} />
+        <Route path="/users" element={<Users users={users} />} />
+      </Routes>
     </div>
   )
 }
+
+/*
+<Routes>
+        <Route path="/" element={<Home blogs={blogs2} user={user2} addBlog={addBlog} voteBlog={voteBlog} deleteBlog={deleteBlog} blogFormRef={blogFormRef} />} />
+        <Route path="/users" element={<Users users={users} />} />
+        <Route path="/users/:id" element={<User user={user} />}/>
+        <Route path="/blogs/:id" element={<SingleBlog blog={blog} />}/>
+      </Routes>
+*/
 
 export default App
