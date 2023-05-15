@@ -8,7 +8,7 @@ const BlogForm = ({ createBlog }) => {
 
   const dispatch = useNotificationDispatch()
 
-  const addBlog = (event) => {
+  const addBlog = async (event) => {
     event.preventDefault()
     try {
       createBlog({
