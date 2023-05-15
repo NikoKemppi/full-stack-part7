@@ -8,7 +8,7 @@ import { useNotificationValue, useNotificationDispatch } from './NotificationCon
 import { useUserValue, useUserDispatch } from './UserContext'
 import { useQuery, useMutation, useQueryClient  } from 'react-query'
 import { Routes, Route } from 'react-router-dom'
-// import { useMatch } from 'react-router-dom'
+import { useMatch } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import { setToken, getBlogs, createBlog, updateBlog, removeBlog, login } from './requests'
 import axios from 'axios'
@@ -41,8 +41,6 @@ const Home = ({ blogs, user, addBlog, voteBlog, deleteBlog, blogFormRef }) => {
 const Users = ({ users }) => {
   console.log('users:', users)
 
-  users.for
-
   return (
     <div>
       <h2>Users</h2>
@@ -56,7 +54,7 @@ const Users = ({ users }) => {
         <tbody>
           {users.map(user =>
             <tr key={user.id}>
-              <td>{user.name}</td>
+              <td><Link to={`/users/${user.id}`}>{user.name}</Link></td>
               <td>{user.blogs.length}</td>
             </tr>
           )}
@@ -66,8 +64,8 @@ const Users = ({ users }) => {
   )
 }
 
-/*
 const User = ({ user }) => {
+  console.log(user)
   if (!user) {
     return null
   }
@@ -78,15 +76,14 @@ const User = ({ user }) => {
       <h3>added blogs</h3>
       <ul>
         {user.blogs.map(blog =>
-        {
-          <li>{blog.title}</li>
-        }
+          <li key={blog.id}>{blog.title}</li>
         )}
       </ul>
     </div>
   )
 }
 
+/*
 const SingleBlog = ({ blog }) => {
   return (
     <div>
@@ -227,6 +224,8 @@ const App = () => {
     }
   )
 
+  const userMatch = useMatch('/users/:id')
+
   if ( result.isLoading ) {
     return <div>loading data...</div>
   }
@@ -234,9 +233,8 @@ const App = () => {
   const blogs2 = result.data
   console.log(blogs2)
 
-  /*
-  const userMatch = useMatch('/users/:id')
-  const user = userMatch ? users.find(a => a.id === Number(userMatch.params.id)) : null
+  const user = userMatch ? users.find(a => a.id === userMatch.params.id) : null
+
   /*
   const blogMatch = useMatch('/users/:id')
   const blog = userMatch ? blogs2.find(a => a.id === Number(blogMatch.params.id)) : null
@@ -284,6 +282,7 @@ const App = () => {
         <button onClick={handleLogout}>logout</button>
       </div>
       <Routes>
+        <Route path="/users/:id" element={<User user={user} />}/>
         <Route path="/" element={<Home blogs={blogs2} user={user2} addBlog={addBlog} voteBlog={voteBlog} deleteBlog={deleteBlog} blogFormRef={blogFormRef} />} />
         <Route path="/users" element={<Users users={users} />} />
       </Routes>
@@ -292,7 +291,7 @@ const App = () => {
 }
 
 /*
-<Routes>
+      <Routes>
         <Route path="/" element={<Home blogs={blogs2} user={user2} addBlog={addBlog} voteBlog={voteBlog} deleteBlog={deleteBlog} blogFormRef={blogFormRef} />} />
         <Route path="/users" element={<Users users={users} />} />
         <Route path="/users/:id" element={<User user={user} />}/>
