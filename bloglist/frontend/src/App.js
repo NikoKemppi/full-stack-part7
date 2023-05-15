@@ -7,10 +7,9 @@ import blogService from './services/blogs'
 import loginService from './services/login'
 import { useNotificationValue, useNotificationDispatch } from './NotificationContext'
 import { useQuery, useMutation, useQueryClient  } from 'react-query'
-import { setToken, getBlogs, createBlog } from './requests'
+import { setToken, getBlogs, createBlog, updateBlog, removeBlog } from './requests'
 
 const App = () => {
-  const [blogs, setBlogs] = useState([])
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
@@ -24,14 +23,16 @@ const App = () => {
       queryClient.setQueryData('blogs', blogs.concat(newBlog))
     }
   })
-
-  /*
-  useEffect(() => {
-    blogService.getAll().then(blogs =>
-      setBlogs(blogs)
-    )
-  }, [])
-  */
+  const updateBlogMutation = useMutation(updateBlog, {
+    onSuccess: () => {
+      queryClient.invalidateQueries('blogs')
+    },
+  })
+  const removeBlogMutation = useMutation(removeBlog, {
+    onSuccess: () => {
+      queryClient.invalidateQueries('blogs')
+    },
+  })
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
@@ -84,23 +85,12 @@ const App = () => {
   }
 
   const addBlog = async (blogObject) => {
-    /*
     blogFormRef.current.toggleVisibility()
-    const returnedBlog = await blogService.create(blogObject)
-    returnedBlog.user = {
-      id: user.id,
-      name: user.name,
-      username: user.username,
-    }
-    // console.log('modified blog: ', returnedBlog)
-    setBlogs(blogs.concat(returnedBlog))
-    */
-
     newBlogMutation.mutate(blogObject)
   }
 
-  const updateBlog = async (blog) => {
-    // console.log(blog)
+  const voteBlog = async (blog) => {
+    console.log(blog)
     const updatedBlogObject = {
       user: blog.user.id,
       likes: blog.likes + 1,
@@ -108,19 +98,14 @@ const App = () => {
       title: blog.title,
       url: blog.url
     }
-    // console.log(blog)
-    const returnedBlog = await blogService.update(blog.id, updatedBlogObject)
-    returnedBlog.user = blog.user
-    // console.log('updated blog: ', returnedBlog)
-    const updatedBlogs = blogs.map(b => b.id === blog.id ? returnedBlog : b)
-    setBlogs(updatedBlogs)
+
+    updateBlogMutation.mutate({ id: blog.id, updatedBlog: updatedBlogObject })
   }
 
   const deleteBlog = async (blog) => {
     const removedId = blog.id
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
-      await blogService.remove(removedId)
-      setBlogs(blogs.filter(b => b.id !== removedId))
+      removeBlogMutation.mutate(removedId)
     }
   }
 
@@ -184,7 +169,7 @@ const App = () => {
           <BlogForm createBlog={addBlog} />
         </Togglable>
         {blogs2.sort((a, b) => b.likes - a.likes).map(blog =>
-          <Blog key={blog.id} blog={blog} username={user.name} updateBlog={updateBlog} deleteBlog={deleteBlog} />
+          <Blog key={blog.id} blog={blog} username={user.name} updateBlog={voteBlog} deleteBlog={deleteBlog} />
         )}
       </div>
     </div>

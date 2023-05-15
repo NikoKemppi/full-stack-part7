@@ -34,12 +34,12 @@ const Blog = ({ blog, username, updateBlog, deleteBlog }) => {
     setShowDetails(!showDetails)
   }
 
-  const handleLikeClick = (event) => {
+  const handleLikeClick = async (event) => {
     event.preventDefault()
     updateBlog(blog)
   }
 
-  const handleRemove = (event) => {
+  const handleRemove = async (event) => {
     event.preventDefault()
     deleteBlog(blog)
   }
