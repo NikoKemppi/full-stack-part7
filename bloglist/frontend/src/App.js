@@ -1,22 +1,26 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import Notification from './components/Notification'
 import BlogForm from './components/BlogForm'
 import Togglable from './components/Togglable'
-import blogService from './services/blogs'
-import loginService from './services/login'
+// import blogService from './services/blogs'
+// import loginService from './services/login'
 import { useNotificationValue, useNotificationDispatch } from './NotificationContext'
+import { useUserValue, useUserDispatch } from './UserContext'
 import { useQuery, useMutation, useQueryClient  } from 'react-query'
-import { setToken, getBlogs, createBlog, updateBlog, removeBlog } from './requests'
+import { setToken, getBlogs, createBlog, updateBlog, removeBlog, login } from './requests'
 
 const App = () => {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [user, setUser] = useState(null)
+  // const [username, setUsername] = useState('')
+  // const [password, setPassword] = useState('')
+  // const [user, setUser] = useState(null)
 
   const queryClient = useQueryClient()
   const notification = useNotificationValue()
-  const dispatch = useNotificationDispatch()
+  const notificationDispatch = useNotificationDispatch()
+  const user2 = useUserValue()
+  const userDispatch = useUserDispatch()
+
   const newBlogMutation = useMutation(createBlog, {
     onSuccess: (newBlog) => {
       const blogs = queryClient.getQueryData('blogs')
@@ -38,8 +42,9 @@ const App = () => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
-      setUser(user)
-      blogService.setToken(user.token)
+      // setUser(user)
+      userDispatch({ type: 'SET_USER', user: user })
+      // blogService.setToken(user.token)
       setToken(user.token) // new version
     }
   }, [])
@@ -50,21 +55,27 @@ const App = () => {
     event.preventDefault()
 
     try {
+      const username = user2.username
+      const password = user2.password
+      /*
       const user = await loginService.login({
         username, password,
       })
+      */
+      const user = await login({ username: username, password: password })
       window.localStorage.setItem(
         'loggedBlogAppUser', JSON.stringify(user)
       )
-      blogService.setToken(user.token)
+      // blogService.setToken(user.token)
       setToken(user.token) // new version
-      setUser(user)
-      setUsername('')
-      setPassword('')
+      // setUser(user)
+      // setUsername('')
+      // setPassword('')
+      userDispatch({ type: 'LOGIN', user: user })
     } catch (exception) {
-      dispatch({ type: 'ERROR', text: 'wrong username or password' })
+      notificationDispatch({ type: 'ERROR', text: 'wrong username or password' })
       setTimeout(() => {
-        dispatch({ type: 'REMOVE' })
+        notificationDispatch({ type: 'REMOVE' })
       }, 5000)
     }
   }
@@ -73,13 +84,14 @@ const App = () => {
     event.preventDefault()
     try {
       window.localStorage.removeItem('loggedBlogAppUser')
-      setUser(null)
-      setUsername('')
-      setPassword('')
+      // setUser(null)
+      // setUsername('')
+      // setPassword('')
+      userDispatch({ type: 'LOGOUT' })
     } catch (execption) {
-      dispatch({ type: 'ERROR', text: 'log out failed' })
+      notificationDispatch({ type: 'ERROR', text: 'log out failed' })
       setTimeout(() => {
-        dispatch({ type: 'REMOVE' })
+        notificationDispatch({ type: 'REMOVE' })
       }, 5000)
     }
   }
@@ -87,6 +99,21 @@ const App = () => {
   const addBlog = async (blogObject) => {
     blogFormRef.current.toggleVisibility()
     newBlogMutation.mutate(blogObject)
+    /*
+    const modifiedUser = {
+      id: user2.user.id,
+      name: user2.user.name,
+      user: user2.user.username
+    }
+    const blog = {
+      user: modifiedUser,
+      likes: 0,
+      author: blogObject.author,
+      title: blogObject.title,
+      url: blogObject.url
+    }
+    updateBlogMutation.mutate({ id: blog.id, updatedBlog: blog })
+    */
   }
 
   const voteBlog = async (blog) => {
@@ -124,7 +151,7 @@ const App = () => {
   const blogs2 = result.data
   console.log(blogs2)
 
-  if (user === null) {
+  if (user2.user === null) {
     return (
       <div>
         <h2>Log in to application</h2>
@@ -135,9 +162,9 @@ const App = () => {
             <input
               id='username'
               type="text"
-              value={username}
+              value={user2.username}
               name="Username"
-              onChange={({ target }) => setUsername(target.value)}
+              onChange={({ target }) => userDispatch({ type: 'SET_USERNAME', username: target.value }) /*setUsername(target.value)*/ }
             />
           </div>
           <div>
@@ -145,9 +172,9 @@ const App = () => {
             <input
               id='password'
               type="password"
-              value={password}
+              value={user2.password}
               name="Password"
-              onChange={({ target }) => setPassword(target.value)}
+              onChange={({ target }) => userDispatch({ type: 'SET_PASSWORD', password: target.value }) /*setPassword(target.value)*/ }
             />
           </div>
           <button id="login-button" type="submit">login</button>
@@ -161,7 +188,7 @@ const App = () => {
       <div>
         <h2>blogs</h2>
         <Notification message={notification} />
-        {user.name} logged in
+        {user2.user.name} logged in
         <button onClick={handleLogout}>logout</button>
       </div>
       <div>
@@ -169,7 +196,7 @@ const App = () => {
           <BlogForm createBlog={addBlog} />
         </Togglable>
         {blogs2.sort((a, b) => b.likes - a.likes).map(blog =>
-          <Blog key={blog.id} blog={blog} username={user.name} updateBlog={voteBlog} deleteBlog={deleteBlog} />
+          <Blog key={blog.id} blog={blog} username={user2.user.name} updateBlog={voteBlog} deleteBlog={deleteBlog} />
         )}
       </div>
     </div>

@@ -28,3 +28,6 @@ export const removeBlog = id => {
 
   return axios.delete(`${ baseUrl }/blogs/${id}`, config).then(res => res.data)
 }
+
+export const login = credentials =>
+  axios.post(`${baseUrl}/login`, credentials).then(res => res.data)
