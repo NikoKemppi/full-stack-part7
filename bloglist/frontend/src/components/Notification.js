@@ -1,5 +1,5 @@
 const Notification = ({ message }) => {
-  if (message === null) {
+  if (message === 'default text') {
     return null
   } else if (message.startsWith('Error')) {
     return (

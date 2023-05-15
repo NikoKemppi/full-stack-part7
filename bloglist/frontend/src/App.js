@@ -5,13 +5,16 @@ import BlogForm from './components/BlogForm'
 import Togglable from './components/Togglable'
 import blogService from './services/blogs'
 import loginService from './services/login'
+import { useNotificationValue, useNotificationDispatch } from './NotificationContext'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
-  const [message, setMessage] = useState(null)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
+
+  const notification = useNotificationValue()
+  const dispatch = useNotificationDispatch()
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
@@ -45,9 +48,9 @@ const App = () => {
       setUsername('')
       setPassword('')
     } catch (exception) {
-      setMessage('Error: wrong username or password')
+      dispatch({ type: 'ERROR', text: 'wrong username or password' })
       setTimeout(() => {
-        setMessage(null)
+        dispatch({ type: 'REMOVE' })
       }, 5000)
     }
   }
@@ -60,9 +63,9 @@ const App = () => {
       setUsername('')
       setPassword('')
     } catch (execption) {
-      setMessage('Error: log out failed')
+      dispatch({ type: 'ERROR', text: 'log out failed' })
       setTimeout(() => {
-        setMessage(null)
+        dispatch({ type: 'REMOVE' })
       }, 5000)
     }
   }
@@ -108,7 +111,7 @@ const App = () => {
     return (
       <div>
         <h2>Log in to application</h2>
-        <Notification message={message} />
+        <Notification message={notification} />
         <form onSubmit={handleLogin}>
           <div>
             username
@@ -140,13 +143,13 @@ const App = () => {
     <div>
       <div>
         <h2>blogs</h2>
-        <Notification message={message} />
+        <Notification message={notification} />
         {user.name} logged in
         <button onClick={handleLogout}>logout</button>
       </div>
       <div>
         <Togglable buttonLabel1="create new blog" buttonLabel2="cancel" ref={blogFormRef}>
-          <BlogForm createBlog={addBlog} setMessage={setMessage} />
+          <BlogForm createBlog={addBlog} />
         </Togglable>
         {blogs.sort((a, b) => b.likes - a.likes).map(blog =>
           <Blog key={blog.id} blog={blog} username={user.name} updateBlog={updateBlog} deleteBlog={deleteBlog} />

@@ -1,9 +1,12 @@
 import { useState } from 'react'
+import { useNotificationDispatch } from '../NotificationContext'
 
-const BlogForm = ({ createBlog, setMessage }) => {
+const BlogForm = ({ createBlog }) => {
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
   const [url, setUrl] = useState('')
+
+  const dispatch = useNotificationDispatch()
 
   const addBlog = (event) => {
     event.preventDefault()
@@ -14,18 +17,18 @@ const BlogForm = ({ createBlog, setMessage }) => {
         url: url
       })
       if (title !== '' && url !== '') {
-        setMessage(`a new blog ${title} by ${author} added`)
+        dispatch({ type: 'ADD', text: `${title} by ${author}` })
         setTimeout(() => {
-          setMessage(null)
+          dispatch({ type: 'REMOVE' })
         }, 5000)
       }
       setTitle('')
       setAuthor('')
       setUrl('')
     } catch (exception) {
-      setMessage('Error: could not add the blog')
+      dispatch({ type: 'ERROR', text: 'could not add the blog' })
       setTimeout(() => {
-        setMessage(null)
+        dispatch({ type: 'REMOVE' })
       }, 5000)
     }
   }
