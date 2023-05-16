@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { useState } from 'react'
-import Blog from './components/Blog'
 import Notification from './components/Notification'
 import BlogForm from './components/BlogForm'
 import Togglable from './components/Togglable'
@@ -10,10 +9,11 @@ import { useQuery, useMutation, useQueryClient  } from 'react-query'
 import { Routes, Route } from 'react-router-dom'
 import { useMatch } from 'react-router-dom'
 import { Link } from 'react-router-dom'
-import { setToken, getBlogs, createBlog, updateBlog, removeBlog, login } from './requests'
+import { setToken, getBlogs, createBlog, updateBlog, login } from './requests'
+// import { removeBlog } from './requests'
 import axios from 'axios'
 
-const Menu = () => {
+const Menu = ({ name, handleLogout }) => {
   const padding = {
     paddingRight: 5
   }
@@ -21,18 +21,30 @@ const Menu = () => {
     <div>
       <Link style={padding} to="/">blogs</Link>
       <Link style={padding} to="/users">users</Link>
+      {name} logged in
+      <button onClick={handleLogout}>logout</button>
     </div>
   )
 }
 
-const Home = ({ blogs, user, addBlog, voteBlog, deleteBlog, blogFormRef }) => {
+const Home = ({ blogs, addBlog, blogFormRef }) => {
+  const blogStyle = {
+    paddingTop: 10,
+    paddingLeft: 2,
+    border: 'solid',
+    borderWidth: 1,
+    marginBottom: 5
+  }
+
   return (
     <div>
       <Togglable buttonLabel1="create new blog" buttonLabel2="cancel" ref={blogFormRef}>
         <BlogForm createBlog={addBlog} />
       </Togglable>
       {blogs.sort((a, b) => b.likes - a.likes).map(blog =>
-        <Blog key={blog.id} blog={blog} username={user.user.name} updateBlog={voteBlog} deleteBlog={deleteBlog} />
+        <div style={blogStyle} key={blog.id}>
+          <Link to={`/blogs/${blog.id}`}>{blog.title} {blog.author}</Link>
+        </div>
       )}
     </div>
   )
@@ -83,20 +95,29 @@ const User = ({ user }) => {
   )
 }
 
-/*
-const SingleBlog = ({ blog }) => {
+const SingleBlog = ({ blog, voteBlog }) => {
+  console.log(blog)
+  if (!blog) {
+    return null
+  }
+
+  const handleLikeClick = async (event) => {
+    event.preventDefault()
+    voteBlog(blog)
+  }
+
   return (
     <div>
       <h2>{blog.title} {blog.author}</h2>
-      <p>{blog.url}</p>
-      <p>{blog.likes} likes</p>
+      <p><a href={blog.url}>{blog.url}</a></p>
+      <div>
+        {blog.likes} likes
+        <button id='like-button' onClick={handleLikeClick}>like</button>
+      </div>
       <p>added by {blog.user.name}</p>
     </div>
   )
 }
-
-
-*/
 
 const App = () => {
   const [users, setUsers] = useState([])
@@ -118,11 +139,13 @@ const App = () => {
       queryClient.invalidateQueries('blogs')
     },
   })
+  /*
   const removeBlogMutation = useMutation(removeBlog, {
     onSuccess: () => {
       queryClient.invalidateQueries('blogs')
     },
   })
+  */
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
@@ -209,12 +232,14 @@ const App = () => {
     updateBlogMutation.mutate({ id: blog.id, updatedBlog: updatedBlogObject })
   }
 
+  /*
   const deleteBlog = async (blog) => {
     const removedId = blog.id
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
       removeBlogMutation.mutate(removedId)
     }
   }
+  */
 
   const result = useQuery(
     'blogs',
@@ -225,20 +250,17 @@ const App = () => {
   )
 
   const userMatch = useMatch('/users/:id')
+  const blogMatch = useMatch('/blogs/:id')
 
   if ( result.isLoading ) {
     return <div>loading data...</div>
   }
 
   const blogs2 = result.data
-  console.log(blogs2)
+  console.log('blogs2', blogs2)
 
   const user = userMatch ? users.find(a => a.id === userMatch.params.id) : null
-
-  /*
-  const blogMatch = useMatch('/users/:id')
-  const blog = userMatch ? blogs2.find(a => a.id === Number(blogMatch.params.id)) : null
-  */
+  const blog = blogMatch ? blogs2.find(a => a.id === blogMatch.params.id) : null
 
   if (user2.user === null) {
     return (
@@ -275,7 +297,7 @@ const App = () => {
   return (
     <div>
       <div>
-        <Menu />
+        <Menu name={user2.user.name} handleLogout={handleLogout} />
         <h2>blogs</h2>
         <Notification message={notification} />
         {user2.user.name} logged in
@@ -283,7 +305,8 @@ const App = () => {
       </div>
       <Routes>
         <Route path="/users/:id" element={<User user={user} />}/>
-        <Route path="/" element={<Home blogs={blogs2} user={user2} addBlog={addBlog} voteBlog={voteBlog} deleteBlog={deleteBlog} blogFormRef={blogFormRef} />} />
+        <Route path="/blogs/:id" element={<SingleBlog blog={blog} voteBlog={voteBlog} />}/>
+        <Route path="/" element={<Home blogs={blogs2} addBlog={addBlog} blogFormRef={blogFormRef} />} />
         <Route path="/users" element={<Users users={users} />} />
       </Routes>
     </div>
@@ -297,6 +320,7 @@ const App = () => {
         <Route path="/users/:id" element={<User user={user} />}/>
         <Route path="/blogs/:id" element={<SingleBlog blog={blog} />}/>
       </Routes>
+      <Blog key={blog.id} blog={blog} username={user.user.name} updateBlog={voteBlog} deleteBlog={deleteBlog} />
 */
 
 export default App
