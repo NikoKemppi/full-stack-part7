@@ -8,6 +8,8 @@ const notificationReducer = (state, action) => {
     return `Error: ${action.text}`
   case 'REMOVE':
     return 'default text'
+  case 'COMMENT':
+    return `a new comment '${action.text}' added`
   default:
     return state
   }

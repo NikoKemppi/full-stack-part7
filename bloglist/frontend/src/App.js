@@ -9,7 +9,7 @@ import { useQuery, useMutation, useQueryClient  } from 'react-query'
 import { Routes, Route } from 'react-router-dom'
 import { useMatch } from 'react-router-dom'
 import { Link } from 'react-router-dom'
-import { setToken, getBlogs, createBlog, updateBlog, login } from './requests'
+import { setToken, getBlogs, createBlog, updateBlog, login, addComment, getComments } from './requests'
 // import { removeBlog } from './requests'
 import axios from 'axios'
 
@@ -95,16 +95,41 @@ const User = ({ user }) => {
   )
 }
 
-const SingleBlog = ({ blog, voteBlog }) => {
+const SingleBlog = ({ blog, voteBlog, comments, commentBlog }) => {
   console.log(blog)
   if (!blog) {
     return null
   }
 
+  const [comment, setComment] = useState('')
+
+  const notificationDispatch = useNotificationDispatch()
+
   const handleLikeClick = async (event) => {
     event.preventDefault()
     voteBlog(blog)
   }
+
+  const addComment = async (event) => {
+    event.preventDefault()
+    try {
+      commentBlog({ blogid: blog.id, content: comment })
+      if (comment !== '') {
+        notificationDispatch({ type: 'COMMENT', text: comment })
+        setTimeout(() => {
+          notificationDispatch({ type: 'REMOVE' })
+        }, 5000)
+      }
+      setComment('')
+    } catch (exception) {
+      notificationDispatch({ type: 'ERROR', text: 'could not add the comment' })
+      setTimeout(() => {
+        notificationDispatch({ type: 'REMOVE' })
+      }, 5000)
+    }
+  }
+
+  const blogComments = comments.filter(c => c.blogid === blog.id)
 
   return (
     <div>
@@ -115,6 +140,24 @@ const SingleBlog = ({ blog, voteBlog }) => {
         <button id='like-button' onClick={handleLikeClick}>like</button>
       </div>
       <p>added by {blog.user.name}</p>
+      <div>
+        <h3>comments</h3>
+        <form onSubmit={addComment}>
+          <div>
+            <input
+              value={comment}
+              onChange={event => setComment(event.target.value)}
+              placeholder='new comment'
+            />
+          </div>
+          <button id="create-button" type="submit">add comment</button>
+        </form>
+        <ul>
+          {blogComments.map(comment =>
+            <li key={comment.id}>{comment.content}</li>
+          )}
+        </ul>
+      </div>
     </div>
   )
 }
@@ -146,6 +189,12 @@ const App = () => {
     },
   })
   */
+  const newCommentMutation = useMutation(addComment, {
+    onSuccess: (newComment) => {
+      const comments = queryClient.getQueryData('comments')
+      queryClient.setQueryData('comments', comments.concat(newComment))
+    }
+  })
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
@@ -241,9 +290,21 @@ const App = () => {
   }
   */
 
+  const commentBlog = async (comment) => {
+    console.log('comment:', comment)
+    newCommentMutation.mutate({ blogid: comment.blogid, content: comment.content })
+  }
+
   const result = useQuery(
     'blogs',
     getBlogs,
+    {
+      refetchOnWindowFocus: false
+    }
+  )
+  const result2 = useQuery(
+    'comments',
+    getComments,
     {
       refetchOnWindowFocus: false
     }
@@ -252,12 +313,14 @@ const App = () => {
   const userMatch = useMatch('/users/:id')
   const blogMatch = useMatch('/blogs/:id')
 
-  if ( result.isLoading ) {
+  if ( result.isLoading || result2.isLoading ) {
     return <div>loading data...</div>
   }
 
   const blogs2 = result.data
   console.log('blogs2', blogs2)
+  const comments = result2.data
+  console.log('comments', comments)
 
   const user = userMatch ? users.find(a => a.id === userMatch.params.id) : null
   const blog = blogMatch ? blogs2.find(a => a.id === blogMatch.params.id) : null
@@ -303,7 +366,7 @@ const App = () => {
       </div>
       <Routes>
         <Route path="/users/:id" element={<User user={user} />}/>
-        <Route path="/blogs/:id" element={<SingleBlog blog={blog} voteBlog={voteBlog} />}/>
+        <Route path="/blogs/:id" element={<SingleBlog blog={blog} voteBlog={voteBlog} comments={comments} commentBlog={commentBlog} />}/>
         <Route path="/" element={<Home blogs={blogs2} addBlog={addBlog} blogFormRef={blogFormRef} />} />
         <Route path="/users" element={<Users users={users} />} />
       </Routes>

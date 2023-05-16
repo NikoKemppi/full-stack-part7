@@ -31,3 +31,9 @@ export const removeBlog = id => {
 
 export const login = credentials =>
   axios.post(`${baseUrl}/login`, credentials).then(res => res.data)
+
+export const addComment = x =>
+  axios.post(`${baseUrl}/blogs/${x.blogid}/comments`, x).then(res => res.data)
+
+export const getComments = () =>
+  axios.get(`${baseUrl}/blogs/comments`).then(res => res.data)

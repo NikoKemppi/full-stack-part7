@@ -1,6 +1,7 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const Comment = require('../models/comment')
 const jwt = require('jsonwebtoken')
 const { userExtractor } = require('../utils/middleware')
 
@@ -83,6 +84,28 @@ blogsRouter.put('/:id', async (request, response, next) => {
     response.json(updatedBlog)
   } catch (error) {
     next(error)
+  }
+})
+
+blogsRouter.get('/comments', async (request, response) => {
+  const comments = await Comment.find({})
+  response.json(comments)
+})
+
+blogsRouter.post('/:id/comments', async (request, response) => {
+  const body = request.body
+  console.log('body', body)
+
+  const comment = new Comment({
+    content: body.content,
+    blogid: request.params.id
+  })
+
+  try {
+    const savedComment = await comment.save()
+    response.status(201).json(savedComment)
+  } catch (exception) {
+    response.status(400).end()
   }
 })
 
