@@ -298,10 +298,8 @@ const App = () => {
     <div>
       <div>
         <Menu name={user2.user.name} handleLogout={handleLogout} />
-        <h2>blogs</h2>
+        <h2>blog app</h2>
         <Notification message={notification} />
-        {user2.user.name} logged in
-        <button onClick={handleLogout}>logout</button>
       </div>
       <Routes>
         <Route path="/users/:id" element={<User user={user} />}/>
@@ -312,15 +310,5 @@ const App = () => {
     </div>
   )
 }
-
-/*
-      <Routes>
-        <Route path="/" element={<Home blogs={blogs2} user={user2} addBlog={addBlog} voteBlog={voteBlog} deleteBlog={deleteBlog} blogFormRef={blogFormRef} />} />
-        <Route path="/users" element={<Users users={users} />} />
-        <Route path="/users/:id" element={<User user={user} />}/>
-        <Route path="/blogs/:id" element={<SingleBlog blog={blog} />}/>
-      </Routes>
-      <Blog key={blog.id} blog={blog} username={user.user.name} updateBlog={voteBlog} deleteBlog={deleteBlog} />
-*/
 
 export default App
