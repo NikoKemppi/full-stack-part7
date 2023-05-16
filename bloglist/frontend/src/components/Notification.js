@@ -1,17 +1,21 @@
+import {
+  Alert
+} from '@mui/material'
+
 const Notification = ({ message }) => {
   if (message === 'default text') {
     return null
   } else if (message.startsWith('Error')) {
     return (
-      <div className="error">
+      <Alert severity="error">
         {message}
-      </div>
+      </Alert>
     )
   } else {
     return (
-      <div className="success">
+      <Alert severity="success">
         {message}
-      </div>
+      </Alert>
     )
   }
 }

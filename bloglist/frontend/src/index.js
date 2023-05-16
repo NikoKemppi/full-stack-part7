@@ -5,18 +5,21 @@ import { NotificationContextProvider } from './NotificationContext'
 import { UserContextProvider } from './UserContext'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { BrowserRouter as Router } from 'react-router-dom'
+import { Container } from '@mui/material'
 import './index.css'
 
 const queryClient = new QueryClient()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <Router>
-    <QueryClientProvider client={queryClient}>
-      <NotificationContextProvider>
-        <UserContextProvider>
-          <App />
-        </UserContextProvider>
-      </NotificationContextProvider>
-    </QueryClientProvider>
-  </Router>
+  <Container>
+    <Router>
+      <QueryClientProvider client={queryClient}>
+        <NotificationContextProvider>
+          <UserContextProvider>
+            <App />
+          </UserContextProvider>
+        </NotificationContextProvider>
+      </QueryClientProvider>
+    </Router>
+  </Container>
 )

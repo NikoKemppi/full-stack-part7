@@ -12,28 +12,63 @@ import { Link } from 'react-router-dom'
 import { setToken, getBlogs, createBlog, updateBlog, login, addComment, getComments } from './requests'
 // import { removeBlog } from './requests'
 import axios from 'axios'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  TextField,
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  AppBar,
+  Toolbar,
+} from '@mui/material'
+import { ThemeProvider, createTheme } from '@mui/material/styles'
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#4CAF50'
+    },
+    secondary: {
+      main: '#FFC400'
+    }
+  }
+})
 
 const Menu = ({ name, handleLogout }) => {
-  const padding = {
-    paddingRight: 5
-  }
   return (
     <div>
-      <Link style={padding} to="/">blogs</Link>
-      <Link style={padding} to="/users">users</Link>
-      {name} logged in
-      <button onClick={handleLogout}>logout</button>
+      <AppBar position="static">
+        <Toolbar>
+          <Button color="inherit" component={Link} to="/">
+            blogs
+          </Button>
+          <Button color="inherit" component={Link} to="/users">
+            users
+          </Button>
+          <em>{name} logged in</em>
+          <Button color="inherit" onClick={handleLogout}>
+            logout
+          </Button>
+        </Toolbar>
+      </AppBar>
     </div>
   )
 }
 
 const Home = ({ blogs, addBlog, blogFormRef }) => {
   const blogStyle = {
-    paddingTop: 10,
+    paddingTop: 2,
     paddingLeft: 2,
-    border: 'solid',
+    border: 1,
     borderWidth: 1,
-    marginBottom: 5
+    marginBottom: 1
   }
 
   return (
@@ -41,11 +76,13 @@ const Home = ({ blogs, addBlog, blogFormRef }) => {
       <Togglable buttonLabel1="create new blog" buttonLabel2="cancel" ref={blogFormRef}>
         <BlogForm createBlog={addBlog} />
       </Togglable>
-      {blogs.sort((a, b) => b.likes - a.likes).map(blog =>
-        <div style={blogStyle} key={blog.id}>
-          <Link to={`/blogs/${blog.id}`}>{blog.title} {blog.author}</Link>
-        </div>
-      )}
+      <List>
+        {blogs.sort((a, b) => b.likes - a.likes).map(blog =>
+          <ListItem key={blog.id} component={Link} to={`/blogs/${blog.id}`} sx={blogStyle} >
+            <ListItemText primary={`${blog.title} ${blog.author}`} />
+          </ListItem>
+        )}
+      </List>
     </div>
   )
 }
@@ -56,22 +93,30 @@ const Users = ({ users }) => {
   return (
     <div>
       <h2>Users</h2>
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th>blogs created</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map(user =>
-            <tr key={user.id}>
-              <td><Link to={`/users/${user.id}`}>{user.name}</Link></td>
-              <td>{user.blogs.length}</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell/>
+              <TableCell>
+                <b>blogs created</b>
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {users.map(user => (
+              <TableRow key={user.id}>
+                <TableCell>
+                  <Link to={`/users/${user.id}`}>{user.name}</Link>
+                </TableCell>
+                <TableCell>
+                  {user.blogs.length}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </div>
   )
 }
@@ -86,11 +131,13 @@ const User = ({ user }) => {
     <div>
       <h2>{user.name}</h2>
       <h3>added blogs</h3>
-      <ul>
+      <List>
         {user.blogs.map(blog =>
-          <li key={blog.id}>{blog.title}</li>
+          <ListItem key={blog.id}>
+            <ListItemText primary={blog.title} />
+          </ListItem>
         )}
-      </ul>
+      </List>
     </div>
   )
 }
@@ -137,26 +184,35 @@ const SingleBlog = ({ blog, voteBlog, comments, commentBlog }) => {
       <p><a href={blog.url}>{blog.url}</a></p>
       <div>
         {blog.likes} likes
-        <button id='like-button' onClick={handleLikeClick}>like</button>
+        <Button variant="contained" color="secondary" onClick={handleLikeClick}>
+          like
+        </Button>
       </div>
       <p>added by {blog.user.name}</p>
       <div>
         <h3>comments</h3>
+
         <form onSubmit={addComment}>
           <div>
-            <input
+            <TextField
+              label="new comment"
               value={comment}
               onChange={event => setComment(event.target.value)}
-              placeholder='new comment'
             />
           </div>
-          <button id="create-button" type="submit">add comment</button>
+          <div>
+            <Button variant="contained" color="secondary" type="submit">
+              add comment
+            </Button>
+          </div>
         </form>
-        <ul>
+        <List>
           {blogComments.map(comment =>
-            <li key={comment.id}>{comment.content}</li>
+            <ListItem key={comment.id}>
+              <ListItemText primary={comment.content} />
+            </ListItem>
           )}
-        </ul>
+        </List>
       </div>
     </div>
   )
@@ -327,50 +383,56 @@ const App = () => {
 
   if (user2.user === null) {
     return (
-      <div>
-        <h2>Log in to application</h2>
-        <Notification message={notification} />
-        <form onSubmit={handleLogin}>
-          <div>
-            username
-            <input
-              id='username'
-              type="text"
-              value={user2.username}
-              name="Username"
-              onChange={({ target }) => userDispatch({ type: 'SET_USERNAME', username: target.value }) /*setUsername(target.value)*/ }
-            />
-          </div>
-          <div>
-            password
-            <input
-              id='password'
-              type="password"
-              value={user2.password}
-              name="Password"
-              onChange={({ target }) => userDispatch({ type: 'SET_PASSWORD', password: target.value }) /*setPassword(target.value)*/ }
-            />
-          </div>
-          <button id="login-button" type="submit">login</button>
-        </form>
-      </div>
+      <ThemeProvider theme={theme}>
+        <div>
+          <h2>Log in to application</h2>
+          <Notification message={notification} />
+          <form onSubmit={handleLogin}>
+            <div>
+              <TextField
+                label="username"
+                type="text"
+                value={user2.username}
+                name="Username"
+                onChange={({ target }) => userDispatch({ type: 'SET_USERNAME', username: target.value })}
+              />
+            </div>
+            <div>
+              <TextField
+                label="password"
+                type="password"
+                value={user2.password}
+                name="Password"
+                onChange={({ target }) => userDispatch({ type: 'SET_PASSWORD', password: target.value })}
+              />
+            </div>
+            <div>
+              <Button variant="contained" color="primary" type="submit">
+                login
+              </Button>
+            </div>
+          </form>
+        </div>
+      </ThemeProvider>
     )
   }
 
   return (
-    <div>
+    <ThemeProvider theme={theme}>
       <div>
-        <Menu name={user2.user.name} handleLogout={handleLogout} />
-        <h2>blog app</h2>
-        <Notification message={notification} />
+        <div>
+          <Menu name={user2.user.name} handleLogout={handleLogout} />
+          <h2>blog app</h2>
+          <Notification message={notification} />
+        </div>
+        <Routes>
+          <Route path="/users/:id" element={<User user={user} />}/>
+          <Route path="/blogs/:id" element={<SingleBlog blog={blog} voteBlog={voteBlog} comments={comments} commentBlog={commentBlog} />}/>
+          <Route path="/" element={<Home blogs={blogs2} addBlog={addBlog} blogFormRef={blogFormRef} />} />
+          <Route path="/users" element={<Users users={users} />} />
+        </Routes>
       </div>
-      <Routes>
-        <Route path="/users/:id" element={<User user={user} />}/>
-        <Route path="/blogs/:id" element={<SingleBlog blog={blog} voteBlog={voteBlog} comments={comments} commentBlog={commentBlog} />}/>
-        <Route path="/" element={<Home blogs={blogs2} addBlog={addBlog} blogFormRef={blogFormRef} />} />
-        <Route path="/users" element={<Users users={users} />} />
-      </Routes>
-    </div>
+    </ThemeProvider>
   )
 }
 

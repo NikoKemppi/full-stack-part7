@@ -1,5 +1,9 @@
 import { useState } from 'react'
 import { useNotificationDispatch } from '../NotificationContext'
+import {
+  TextField,
+  Button
+} from '@mui/material'
 
 const BlogForm = ({ createBlog }) => {
   const [title, setTitle] = useState('')
@@ -39,35 +43,33 @@ const BlogForm = ({ createBlog }) => {
       <form onSubmit={addBlog}>
         <div>
           title:
-          <input
-            id="newblogtitle"
-            className='newblogtitle'
+          <TextField
+            label="newblogtitle"
             value={title}
             onChange={event => setTitle(event.target.value)}
-            placeholder='new blog title'
           />
         </div>
         <div>
           author:
-          <input
-            id="newblogauthor"
-            className='newblogauthor'
+          <TextField
+            label="newblogauthor"
             value={author}
             onChange={event => setAuthor(event.target.value)}
-            placeholder='new blog author'
           />
         </div>
         <div>
           url:
-          <input
-            id="newblogurl"
-            className='newblogurl'
+          <TextField
+            label="newblogurl"
             value={url}
             onChange={event => setUrl(event.target.value)}
-            placeholder='new blog url'
           />
         </div>
-        <button id="create-button" type="submit">create</button>
+        <div>
+          <Button variant="contained" color="secondary" type="submit">
+            create
+          </Button>
+        </div>
       </form>
     </div>
   )
