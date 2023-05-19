@@ -8,9 +8,9 @@ import { useUserValue, useUserDispatch } from './UserContext'
 import { useQuery, useMutation, useQueryClient  } from 'react-query'
 import { Routes, Route } from 'react-router-dom'
 import { useMatch } from 'react-router-dom'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { setToken, getBlogs, createBlog, updateBlog, login, addComment, getComments } from './requests'
-// import { removeBlog } from './requests'
+import { removeBlog } from './requests'
 import axios from 'axios'
 import {
   Table,
@@ -142,7 +142,7 @@ const User = ({ user }) => {
   )
 }
 
-const SingleBlog = ({ blog, voteBlog, comments, commentBlog }) => {
+const SingleBlog = ({ blog, voteBlog, removeBlog, comments, commentBlog, username }) => {
   console.log(blog)
   if (!blog) {
     return null
@@ -176,6 +176,11 @@ const SingleBlog = ({ blog, voteBlog, comments, commentBlog }) => {
     }
   }
 
+  const handleRemoveBlog = async (event) => {
+    event.preventDefault()
+    removeBlog(blog)
+  }
+
   const blogComments = comments.filter(c => c.blogid === blog.id)
 
   return (
@@ -189,6 +194,10 @@ const SingleBlog = ({ blog, voteBlog, comments, commentBlog }) => {
         </Button>
       </div>
       <p>added by {blog.user.name}</p>
+      {username === blog.user.name &&
+        <Button variant="contained" color="secondary" onClick={handleRemoveBlog}>
+          remove
+        </Button>}
       <div>
         <h3>comments</h3>
 
@@ -226,6 +235,7 @@ const App = () => {
   const notificationDispatch = useNotificationDispatch()
   const user2 = useUserValue()
   const userDispatch = useUserDispatch()
+  const navigate = useNavigate()
 
   const newBlogMutation = useMutation(createBlog, {
     onSuccess: (newBlog) => {
@@ -238,13 +248,11 @@ const App = () => {
       queryClient.invalidateQueries('blogs')
     },
   })
-  /*
   const removeBlogMutation = useMutation(removeBlog, {
     onSuccess: () => {
       queryClient.invalidateQueries('blogs')
     },
   })
-  */
   const newCommentMutation = useMutation(addComment, {
     onSuccess: (newComment) => {
       const comments = queryClient.getQueryData('comments')
@@ -337,14 +345,13 @@ const App = () => {
     updateBlogMutation.mutate({ id: blog.id, updatedBlog: updatedBlogObject })
   }
 
-  /*
   const deleteBlog = async (blog) => {
     const removedId = blog.id
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
+      navigate('/')
       removeBlogMutation.mutate(removedId)
     }
   }
-  */
 
   const commentBlog = async (comment) => {
     console.log('comment:', comment)
@@ -427,7 +434,7 @@ const App = () => {
         </div>
         <Routes>
           <Route path="/users/:id" element={<User user={user} />}/>
-          <Route path="/blogs/:id" element={<SingleBlog blog={blog} voteBlog={voteBlog} comments={comments} commentBlog={commentBlog} />}/>
+          <Route path="/blogs/:id" element={<SingleBlog blog={blog} voteBlog={voteBlog} removeBlog={deleteBlog} comments={comments} commentBlog={commentBlog} username={user2.user.name} />}/>
           <Route path="/" element={<Home blogs={blogs2} addBlog={addBlog} blogFormRef={blogFormRef} />} />
           <Route path="/users" element={<Users users={users} />} />
         </Routes>
